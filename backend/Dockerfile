@@ -1,15 +1,18 @@
-# Stage 1: Build the Node.js application
-FROM node:14 AS backend
-WORKDIR /app
-COPY backend/package*.json ./
-RUN npm install
-COPY backend .
-RUN npm run build
+# Use an official Go runtime as a parent image
+FROM golang:1.19
 
-# Stage 2: Create a lightweight image for runtime
-FROM node:14-alpine
+# Set the working directory to /go/src/app
 WORKDIR /app
-COPY --from=backend /app/dist ./dist
-COPY --from=backend /app/node_modules ./node_modules
-EXPOSE 3000
-CMD ["node", "dist/index.js"]
+
+# Copy the current directory contents into the container at /go/src/app
+COPY . .
+
+# Build the Go app
+RUN go get -d -v ./...
+RUN go install -v ./...
+
+# Expose port 8080 to the outside world
+EXPOSE 8080
+
+# Command to run the executable
+CMD ["./app"]
